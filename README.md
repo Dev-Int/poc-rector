@@ -14,16 +14,17 @@ Different test about using [Rector](https://github.com/rectorphp/rector)
 
 ## Features
 
-* create your custom rules
-* use TDD to create it
-* learn CI possibility 
+* prepare code base for latest PHP version
+* effortlessly upgrade to next version of any framework
+* switch between frameworks if needed
+* improve quality code without thinking about it
+* define your own automated refactoring procedures
 
 **Enjoy!**
 
 ## Docs
 
-1. The book [RECTOR - The power of automated refactoring](https://matthiasnoback.nl/book/rector-the-power-of-automated-refactoring/) by Matthias Noback and Tomas Votruba.
-2. [PhpStorm using](https://www.jetbrains.com/help/phpstorm/run-configuration-rector.html).
+The book [RECTOR - The power of automated refactoring](https://matthiasnoback.nl/book/rector-the-power-of-automated-refactoring/) by Matthias Noback and Tomas Votruba.
 
 ## Credits
 

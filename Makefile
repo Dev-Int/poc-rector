@@ -20,7 +20,6 @@ DOCKER_COMP   = docker compose
 PHP_CONT      = $(DOCKER_COMP) exec php
 
 .DEFAULT_GOAL = help
-.PHONY        : help build init up down logs sh vendor composer
 
 ## —— 🎵 🐳 The Symfony Docker Makefile 🐳 🎵 ——————————————————————————————————
 help: ## Outputs this help screen
@@ -28,6 +27,8 @@ help: ## Outputs this help screen
 
 wait: ## Sleep 5 seconds
 	sleep 5
+
+.PHONY: help wait
 
 
 ## —— Composer —————————————————————————————————————————————————————————————————
@@ -39,6 +40,7 @@ vendor: composer.lock ## Install vendors according to the current composer.lock 
 vendor: c=install --prefer-dist --no-dev --no-progress --no-scripts --no-interaction
 vendor: composer
 
+.PHONY: composer vendor
 
 
 ## —— Symfony 🎵 ———————————————————————————————————————————————————————————————
@@ -58,6 +60,8 @@ assets: purge ## Install the assets with symlinks in the public folder
 purge: ## Purge cache and logs
 	rm -rf var/cache/* var/logs/*
 
+.PHONY: sf cc fix-perms assets purge
+
 
 ## —— Symfony binary 🎵 —————————————————————————————————————————————————————————
 bin-install: ## Download and install the binary in the project (file is ignored)
@@ -72,6 +76,8 @@ serve: ## Serve the application with HTTPS support
 
 unserve: ## Stop the webserver
 	$(SYMFONY_BIN) server:stop
+
+.PHONY: bin-install cert-install serve unserve
 
 
 ## —— Database —————————————————————————————————————————————————————————————————
@@ -90,7 +96,7 @@ load-fixtures: ## Build the DB, control the schema validity, load fixtures and c
 	$(SYMFONY) doctrine:schema:create
 	$(SYMFONY) doctrine:schema:validate
 	$(SYMFONY) doctrine:fixtures:load -n
-
+.PHONY: reload load-fixtures
 
 ## —— Tests 🐛️ —————————————————————————————————————————————————————————————————
 cc-test: ## Cache clear (env : test)
@@ -106,7 +112,6 @@ clean-db-test: cc-test ## Reset database (env : test)
 tu: phpunit.xml ## Launch unit tests
 	php bin/phpunit --group=unitTest --stop-on-failure
 
-
 tf: phpunit.xml clean-db-test ## Launch functional tests implying external resources (API, services...)
 	php bin/phpunit --group=functionalTest --stop-on-failure
 
@@ -116,12 +121,10 @@ ta: phpunit.xml clean-db-test ## Launch functional and unit tests
 tcov: phpunit.xml clean-db-test ## Launch all tests with coverage
 	XDEBUG_MODE=coverage php bin/phpunit --coverage-html=coverage
 
+.PHONY: tu tf ta tcov
+
 
 ## —— Coding standards ✨ ——————————————————————————————————————————————————————
-qa: phpcs stan cs-fixer # lint ## Launch all static analysis tools
-	$(SYMFONY) lint:yaml config
-	bin/deptrac analyse --config-file=deptrac.yaml
-
 phpcs: ## Run php_codesniffer
 	php ./vendor/bin/phpcs --standard=phpcs.xml -n -p src/
 
@@ -130,6 +133,13 @@ cs-fixer: ## Run php-cs-fixer
 
 stan: ## Run PHPStan only
 	./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit 1G
+
+qa: phpcs stan cs-fixer # lint ## Launch all static analysis tools
+	$(SYMFONY) lint:yaml config
+	bin/deptrac analyse --config-file=deptrac.yaml
+
+.PHONY: phpcs cs-fixer stan qa
+
 
 #psalm: ## Run psalm only
 #	./vendor/bin/psalm --show-info=false
@@ -164,13 +174,15 @@ client-build: ## Build assets for production
 client-lint: ## Lints Js files
 	npx eslint assets/js --fix
 
+.PHONY: client-dev client-watch client-build client-lint
+
 
 ## —— Docker 🐳 ———————————————————————————————————————————————————————————————————
-init: dist_file build up ## Initialize the project
+init: dist_file build ## Initialize the project
 
-dist_file: .php-cs-fixer.php.dist phpcs.xml.dist phpunit.xml.dist # copy the .dist files
-	cp ./.php-cs-fixer.php.dist ./.php-cs-fixer.php
-	cp ./phpcs.xml.dist ./phpcs.xml
+dist_file: phpunit.xml.dist # .php-cs-fixer.php.dist phpcs.xml.dist # copy the .dist files
+	#cp ./.php-cs-fixer.php.dist ./.php-cs-fixer.php
+	#cp ./phpcs.xml.dist ./phpcs.xml
 	cp ./phpunit.xml.dist ./phpunit.xml
 build: compose.yaml ## build docker images
 	@$(DOCKER_COMP) build --pull --no-cache
@@ -181,7 +193,9 @@ down: ## Stop the docker hub
 logs: ## Show live logs
 	@$(DOCKER_COMP) logs --tail=0 --follow
 sh: ## Connect to the PHP FPM container
-	@$(PHP_CONT) bash
+	@$(PHP_CONT) sh
+
+.PHONY: init dist_file build up down logs sh
 
 
 ## —— Stats ————————————————————————————————————————————————————————————————————
